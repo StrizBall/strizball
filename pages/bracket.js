@@ -64,12 +64,26 @@ export default function BracketPage({ session }) {
 
 
   const loadAllBrackets = async () => {
-    const { data } = await supabase
+    const { data: brackets, error } = await supabase
       .from('brackets')
-      .select('user_id, picks, updated_at, profiles(display_name)')
+      .select('user_id, picks, updated_at')
       .order('updated_at', { ascending: false })
-    setAllBrackets(data || [])
+
+    if (error) { console.log('brackets error:', error); return }
+
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, display_name')
+
+    const merged = (brackets || []).map(b => ({
+      ...b,
+      profiles: profiles?.find(p => p.id === b.user_id) || null
+    }))
+
+    console.log('merged:', merged)
+    setAllBrackets(merged)
   }
+
 
   const loadResults = async () => {
     const { data } = await supabase.from('results').select('game_id, winner')
@@ -78,7 +92,8 @@ export default function BracketPage({ session }) {
       data.forEach(row => { r[row.game_id] = row.winner })
       setResults(r)
     }
-  }
+  } 
+
 
   // Sync ESPN results then reload from Supabase
   const syncAndLoadResults = async () => {

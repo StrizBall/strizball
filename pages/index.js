@@ -30,9 +30,15 @@ export default function Home({ session }) {
       })
       if (error) { setError(error.message) }
       else {
-        if (data.user) {
-          await supabase.from('profiles').upsert({ id: data.user.id, display_name: displayName.trim(), email })
-        }
+       if (data.user) {
+         const { error: profileError } = await supabase.from('profiles').insert({
+         id: data.user.id,
+         display_name: displayName.trim(),
+         email
+       })
+       console.log('profile insert error:', profileError)
+    }
+    setSuccess('Account created! Signing you in...') 
         setSuccess('Account created! Signing you in...')
         setTimeout(() => router.push('/bracket'), 1000)
       }
