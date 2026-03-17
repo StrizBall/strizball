@@ -56,9 +56,12 @@ export default function BracketPage({ session }) {
   }
 
   const loadMyPicks = async () => {
-    const { data } = await supabase.from('brackets').select('picks, updated_at').eq('user_id', session.user.id).single()
+    const { data, error } = await supabase.from('brackets').select('picks, updated_at').eq('user_id', session.user.id).single()
+    console.log('loadMyPicks data:', data)
+    console.log('loadMyPicks error:', error) 
     if (data) { setPicks(data.picks); setSavedPicks(data.picks); setSavedAt(data.updated_at) }
   }
+
 
   const loadAllBrackets = async () => {
     const { data } = await supabase
@@ -98,14 +101,20 @@ export default function BracketPage({ session }) {
     setDirty(true)
   }, [locked])
 
+
   const handleSave = async () => {
     if (locked) return
     setSaving(true)
-    await supabase.from('brackets').upsert({ user_id: session.user.id, picks, updated_at: new Date().toISOString() })
-    setSavedPicks(picks)
-    setSavedAt(new Date().toISOString())
-    setDirty(false)
-    loadAllBrackets()
+    const { error } = await supabase.from('brackets').upsert(
+      { user_id: session.user.id, picks, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    )
+    if (!error) {
+      setSavedPicks(picks)
+      setSavedAt(new Date().toISOString())
+      setDirty(false)
+      loadAllBrackets()
+    }
     setSaving(false)
   }
 
