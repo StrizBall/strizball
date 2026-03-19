@@ -2,7 +2,7 @@
 // Automatically fetches NCAA tournament results from ESPN
 // and maps them to our bracket game IDs in Supabase.
 
-import { createClient } from ‘@supabase/supabase-js’
+import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
 process.env.NEXT_PUBLIC_SUPABASE_URL,
